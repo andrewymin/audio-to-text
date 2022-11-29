@@ -1,0 +1,11 @@
+vosk_lang/
+audio_files/
+
+test.py
+wav_to_text.py
+stereo_to_mono.py
+mic_to_text.py
+file_converter.py
+
+timestamp_results.json
+results_text.json
