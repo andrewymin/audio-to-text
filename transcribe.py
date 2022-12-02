@@ -18,15 +18,20 @@ class TranscribeAudio:
         self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-small-en-us-0.15'
         # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.22'
         # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.42-gigaspeech'
-        self.stereoFile = r"A:\New_python\speechToTextVosk\audio_files\transcribing_test.wav"
-        self.monoFile = r"A:\New_python\speechToTextVosk\audio_files\test_conversion_mono.wav"
-        self.timeStamps = "timestamp_results.json"
-        self.transcription = "results_text.json"
+        self.stereoFile = r"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test.wav"
+        self.monoFile = r"A:\New_python\speechToTextVosk\audio_files\wav_files\test_conversion_mono.wav"
+        self.timeStamps = r"A:\New_python\speechToTextVosk\results\timestamp_results.json"
+        self.transcription = r"A:\New_python\speechToTextVosk\results\results_text.json"
+        self.cutOffTime = 3.4
+        self.seconds = 60
+        self.timeLimit = 3
+        self.startTime = 0.0
+        self.endTime = 180.0  # This is the start of one split at for 3 min
 
     def convert(self, seconds):
         # seconds %= 3600
-        mins = seconds // 60
-        seconds %= 60
+        mins = seconds // self.seconds
+        seconds %= self.seconds
         return mins, seconds
 
     def audio_time(self):
@@ -38,9 +43,45 @@ class TranscribeAudio:
         return t
 
     def convertFile(self):
+
         sound = AudioSegment.from_mp3(self.src)
-        sound.export(self.stereoFile, format="wav")
-        print("Successfully converted mp3 to wav")
+
+        if self.audio_time() <= self.cutOffTime:
+            sound.export(self.stereoFile, format="wav")
+            return print("Successfully converted mp3 to wav")
+
+        # print("File will be too long, need to split")
+        num_of_splits = int(float(self.audio_time()) // self.timeLimit)
+        # print(num_of_splits)
+        if num_of_splits == 1:  # This means if there's only one split
+            startTime = self.startTime
+            endTime = self.endTime
+            # cut it to length (if needed)
+            beginning_cut = sound[startTime * 1000:endTime * 1000]
+            # export sound cut as wav file
+            beginning_cut.export(self.stereoFile, format="wav")
+        else:
+            for n in range(num_of_splits):
+                startTime = self.startTime
+                endTime = self.endTime
+                # cut it to length (if needed)
+                cut = sound[startTime * 1000:endTime * 1000]
+                # export sound cut as wav file
+                cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test.wav{n}", format="wav")
+
+                self.startTime = endTime  # new start time is last end time
+                if n != num_of_splits - 1:
+                    self.endTime = endTime * 3
+
+        startTime = self.endTime
+        audio_info = self.audio.info
+        total_sec = int(audio_info.length)
+        # total_sec %= self.seconds
+        print(f"start: {startTime} total: {total_sec}")
+        # remainingTime = (total_sec - self.endTime)
+        print(f"remaining: {total_sec}")
+        remaining_cut = sound[startTime * 1000:total_sec * 1000]
+        remaining_cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{num_of_splits}.wav", format="wav")
 
     def endingSound(self):
         finished_sound = AudioSegment.from_mp3(self.endingMp3)
@@ -121,7 +162,7 @@ class TranscribeAudio:
 
         endTime = time.time()
         total_time = endTime - startTime
-        minutes = int(total_time / 60)
-        seconds = int(total_time % 60)
+        minutes = int(total_time / self.seconds)
+        seconds = int(total_time % self.seconds)
         print(f'Total time it took to transcribe is {minutes}:{seconds}')
 
