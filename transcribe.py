@@ -89,6 +89,10 @@ class TranscribeAudio:
         finished_sound = AudioSegment.from_mp3(self.endingMp3)
         play(finished_sound)
 
+    def multi_spits(self):
+        # create method to make SToM and monoToText DRY
+        pass
+
     def SToM(self):
         if self.splits != 0:
             # print(self.splits)
@@ -152,11 +156,100 @@ class TranscribeAudio:
 
     def monoToText(self):
         startTime = time.time()  # Get current time when run
-        wf = wave.open(self.monoFile, "rb")
 
         # initialize a str to hold results
         results = ""
         textResults = []
+
+        if self.splits != 0:
+            # print(self.splits)
+            for n in range(self.splits):
+                # Changed the open file to a wav file instead of mono due to pitch problems
+                wf = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{n}.wav", "rb")
+
+                # build the model and recognizer objects.
+                model = Model(self.languageModel)
+                recognizer = KaldiRecognizer(model, wf.getframerate())
+                recognizer.SetWords(True)
+
+                while True:
+                    data = wf.readframes(4000)
+                    if len(data) == 0:
+                        break
+                    if recognizer.AcceptWaveform(data):
+                        recognizerResult = recognizer.Result()
+                        results = results + recognizerResult
+                        # convert the recognizerResult string into a dictionary
+                        resultDict = json.loads(recognizerResult)
+                        # save the 'text' value from the dictionary into a list
+                        textResults.append(resultDict.get("text", ""))
+
+                # process "final" result
+                # print(json.loads(recognizer.FinalResult())['text'])
+                finalText = recognizer.FinalResult()
+                # print(finalText)
+                results = results + finalText
+                resultDict = json.loads(finalText)
+                # print(resultDict['text'])
+                textResults.append(resultDict.get("text", ""))
+
+                # write results to a file
+                with open(rf"A:\New_python\speechToTextVosk\results\timestamp_results{n}.json", 'w') as output:
+                    print(results, file=output)
+
+                # write text portion of results to a file
+                with open(rf"A:\New_python\speechToTextVosk\results\results_text{n}.json", 'w') as output:
+                    text_string = " ".join(textResults)
+                    text = text_string.replace(" i ", " I ").replace("i'", "I'")
+                    json.dump(text, output, indent=4)
+
+            wf = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{self.splits}.wav", "rb")
+            # build the model and recognizer objects.
+            model = Model(self.languageModel)
+            recognizer = KaldiRecognizer(model, wf.getframerate())
+            recognizer.SetWords(True)
+
+            while True:
+                data = wf.readframes(4000)
+                if len(data) == 0:
+                    break
+                if recognizer.AcceptWaveform(data):
+                    recognizerResult = recognizer.Result()
+                    results = results + recognizerResult
+                    # convert the recognizerResult string into a dictionary
+                    resultDict = json.loads(recognizerResult)
+                    # save the 'text' value from the dictionary into a list
+                    textResults.append(resultDict.get("text", ""))
+
+            # process "final" result
+            # print(json.loads(recognizer.FinalResult())['text'])
+            finalText = recognizer.FinalResult()
+            # print(finalText)
+            results = results + finalText
+            resultDict = json.loads(finalText)
+            # print(resultDict['text'])
+            textResults.append(resultDict.get("text", ""))
+
+            # write results to a file
+            with open(rf"A:\New_python\speechToTextVosk\results\timestamp_results{self.splits}.json", 'w') as output:
+                print(results, file=output)
+
+            # write text portion of results to a file
+            with open(rf"A:\New_python\speechToTextVosk\results\results_text{self.splits}.json", 'w') as output:
+                text_string = " ".join(textResults)
+                text = text_string.replace(" i ", " I ").replace("i'", "I'")
+                json.dump(text, output, indent=4)
+
+            self.endingSound()
+
+            endTime = time.time()
+            total_time = endTime - startTime
+            minutes = int(total_time / self.seconds)
+            seconds = int(total_time % self.seconds)
+
+            return print(f'Total time it took to transcribe is {minutes}:{seconds}')
+
+        wf = wave.open(self.stereoFile, "rb")
 
         # build the model and recognizer objects.
         model = Model(self.languageModel)
@@ -175,9 +268,6 @@ class TranscribeAudio:
                 # save the 'text' value from the dictionary into a list
                 textResults.append(resultDict.get("text", ""))
 
-           # else:
-           #     print(recognizer.PartialResult())
-
         # process "final" result
         # print(json.loads(recognizer.FinalResult())['text'])
         finalText = recognizer.FinalResult()
@@ -195,7 +285,6 @@ class TranscribeAudio:
         with open(self.transcription, 'w') as output:
             text_string = " ".join(textResults)
             text = text_string.replace(" i ", " I ").replace("i'", "I'")
-
             json.dump(text, output, indent=4)
 
         self.endingSound()
