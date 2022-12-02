@@ -19,7 +19,7 @@ class TranscribeAudio:
         # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.22'
         # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.42-gigaspeech'
         self.stereoFile = r"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test.wav"
-        self.monoFile = r"A:\New_python\speechToTextVosk\audio_files\wav_files\test_conversion_mono.wav"
+        self.monoFile = r"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono.wav"
         self.timeStamps = r"A:\New_python\speechToTextVosk\results\timestamp_results.json"
         self.transcription = r"A:\New_python\speechToTextVosk\results\results_text.json"
         self.cutOffTime = 3.4
@@ -27,6 +27,7 @@ class TranscribeAudio:
         self.timeLimit = 3
         self.startTime = 0.0
         self.endTime = 180.0  # This is the start of one split at for 3 min
+        self.splits = 0
 
     def convert(self, seconds):
         # seconds %= 3600
@@ -38,7 +39,7 @@ class TranscribeAudio:
         audio_info = self.audio.info
         length_in_secs = int(audio_info.length)
         mins, seconds = self.convert(length_in_secs)
-        print(f"Minutes: {mins}\nSeconds: {seconds}")
+        # print(f"Minutes: {mins}\nSeconds: {seconds}")
         t = float(f"{mins}.{seconds}")
         return t
 
@@ -52,6 +53,7 @@ class TranscribeAudio:
 
         # print("File will be too long, need to split")
         num_of_splits = int(float(self.audio_time()) // self.timeLimit)
+        self.splits = num_of_splits
         # print(num_of_splits)
         if num_of_splits == 1:  # This means if there's only one split
             startTime = self.startTime
@@ -59,7 +61,7 @@ class TranscribeAudio:
             # cut it to length (if needed)
             beginning_cut = sound[startTime * 1000:endTime * 1000]
             # export sound cut as wav file
-            beginning_cut.export(self.stereoFile, format="wav")
+            beginning_cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{0}.wav", format="wav")
         else:
             for n in range(num_of_splits):
                 startTime = self.startTime
@@ -67,7 +69,7 @@ class TranscribeAudio:
                 # cut it to length (if needed)
                 cut = sound[startTime * 1000:endTime * 1000]
                 # export sound cut as wav file
-                cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test.wav{n}", format="wav")
+                cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{n}.wav", format="wav")
 
                 self.startTime = endTime  # new start time is last end time
                 if n != num_of_splits - 1:
@@ -77,9 +79,9 @@ class TranscribeAudio:
         audio_info = self.audio.info
         total_sec = int(audio_info.length)
         # total_sec %= self.seconds
-        print(f"start: {startTime} total: {total_sec}")
+        # print(f"start: {startTime} total: {total_sec}")
         # remainingTime = (total_sec - self.endTime)
-        print(f"remaining: {total_sec}")
+        # print(f"remaining: {total_sec}")
         remaining_cut = sound[startTime * 1000:total_sec * 1000]
         remaining_cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{num_of_splits}.wav", format="wav")
 
@@ -88,6 +90,46 @@ class TranscribeAudio:
         play(finished_sound)
 
     def SToM(self):
+        if self.splits != 0:
+            # print(self.splits)
+            for n in range(self.splits):
+                try:
+                    inFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{n}.wav", 'rb')
+                    outFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono{n}.wav", 'wb')
+
+                    outFile.setnchannels(1)
+
+                    outFile.setsampwidth(inFile.getsampwidth())
+                    outFile.setframerate(inFile.getframerate())
+
+                    soundBytes = inFile.readframes(inFile.getnframes())
+
+                    monoSoundBytes = audioop.tomono(soundBytes, inFile.getsampwidth(), 1, 1)
+                    outFile.writeframes(monoSoundBytes)
+                except Exception as e:
+                    print(f"Error from STom: {e}")
+                finally:
+                    inFile.close()
+                    outFile.close()
+            try:
+                inFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{self.splits}.wav", 'rb')
+                outFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono{self.splits}.wav", 'wb')
+
+                outFile.setnchannels(1)
+
+                outFile.setsampwidth(inFile.getsampwidth())
+                outFile.setframerate(inFile.getframerate())
+
+                soundBytes = inFile.readframes(inFile.getnframes())
+
+                monoSoundBytes = audioop.tomono(soundBytes, inFile.getsampwidth(), 1, 1)
+                outFile.writeframes(monoSoundBytes)
+            except Exception as e:
+                print(f"Error from STom: {e}")
+            finally:
+                inFile.close()
+                outFile.close()
+
         try:
             inFile = wave.open(self.stereoFile, 'rb')
             outFile = wave.open(self.monoFile, 'wb')
@@ -98,14 +140,12 @@ class TranscribeAudio:
             outFile.setframerate(inFile.getframerate())
 
             soundBytes = inFile.readframes(inFile.getnframes())
-            print("frames read: {} length: {}".format(inFile.getnframes(), len(soundBytes)))
+            # print("frames read: {} length: {}".format(inFile.getnframes(), len(soundBytes)))
 
             monoSoundBytes = audioop.tomono(soundBytes, inFile.getsampwidth(), 1, 1)
             outFile.writeframes(monoSoundBytes)
-
         except Exception as e:
             print(f"Error from STom: {e}")
-
         finally:
             inFile.close()
             outFile.close()

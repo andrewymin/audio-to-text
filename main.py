@@ -7,10 +7,8 @@ try:
     wav_file = TranscribeAudio(MP3)  # Creating object with src file passed in with mp3 file
     wav_file.convertFile()  # Converting mp3 to stereo wav file
     # wav_file.SToM()
-    # wav_file.monoToText()
+    wav_file.monoToText()
 except Exception as e:
     print(e)
 else:
     print("Transcription complete")
-
-
