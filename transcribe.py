@@ -15,8 +15,8 @@ class TranscribeAudio:
         self.src = recording
         self.audio = MP3(recording)
         self.endingMp3 = 'audio_files/notification_sound.mp3'
-        self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-small-en-us-0.15'
-        # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.22'
+        # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-small-en-us-0.15'
+        self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.22'
         # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.42-gigaspeech'
         self.stereoFile = r"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test.wav"
         self.monoFile = r"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono.wav"

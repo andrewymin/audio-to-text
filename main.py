@@ -1,6 +1,11 @@
 from transcribe import TranscribeAudio
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-MP3 = r"A:\New_python\speechToTextVosk\audio_files\Scribie--Transcription-Test-Practice-Louis-CK-(American-accent-low-difficulty).mp3"
+
+
+MP3 = os.environ.get(r"audio_file")
 # MP3 = r"A:\New_python\speechToTextVosk\audio_files\transcribing_2.mp3"
 
 try:
