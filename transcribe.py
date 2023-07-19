@@ -8,20 +8,20 @@ from vosk import Model, KaldiRecognizer
 import json
 import time
 from mutagen.mp3 import MP3
+import os
 
 
 class TranscribeAudio:
-    def __init__(self, recording):
+    def __init__(self, recording, model):
+        self.current_dir = os.getcwd()
         self.src = recording
         self.audio = MP3(recording)
         self.endingMp3 = 'audio_files/notification_sound.mp3'
-        # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-small-en-us-0.15'
-        self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.22'
-        # self.languageModel = r'A:\New_python\speechToTextVosk\vosk_lang\vosk-model-en-us-0.42-gigaspeech'
-        self.stereoFile = r"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test.wav"
-        self.monoFile = r"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono.wav"
-        self.timeStamps = r"A:\New_python\speechToTextVosk\results\timestamp_results.json"
-        self.transcription = r"A:\New_python\speechToTextVosk\results\results_text.json"
+        self.languageModel = model
+        self.stereoFile = rf"{self.current_dir}\audio_files\wav_files\transcribing_test.wav"
+        self.monoFile = rf"{self.current_dir}\audio_files\mono_files\test_conversion_mono.wav"
+        self.timeStamps = rf"{self.current_dir}\results\timestamp_results.json"
+        self.transcription = rf"{self.current_dir}\results\results_text.json"
         self.cutOffTime = 3.4
         self.seconds = 60
         self.timeLimit = 3
@@ -61,7 +61,7 @@ class TranscribeAudio:
             # cut it to length (if needed)
             beginning_cut = sound[startTime * 1000:endTime * 1000]
             # export sound cut as wav file
-            beginning_cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{0}.wav", format="wav")
+            beginning_cut.export(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{0}.wav", format="wav")
         else:
             for n in range(num_of_splits):
                 startTime = self.startTime
@@ -69,7 +69,7 @@ class TranscribeAudio:
                 # cut it to length (if needed)
                 cut = sound[startTime * 1000:endTime * 1000]
                 # export sound cut as wav file
-                cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{n}.wav", format="wav")
+                cut.export(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{n}.wav", format="wav")
 
                 self.startTime = endTime  # new start time is last end time
                 if n != num_of_splits - 1:
@@ -83,7 +83,7 @@ class TranscribeAudio:
         # remainingTime = (total_sec - self.endTime)
         # print(f"remaining: {total_sec}")
         remaining_cut = sound[startTime * 1000:total_sec * 1000]
-        remaining_cut.export(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{num_of_splits}.wav", format="wav")
+        remaining_cut.export(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{num_of_splits}.wav", format="wav")
 
     def endingSound(self):
         finished_sound = AudioSegment.from_mp3(self.endingMp3)
@@ -93,13 +93,13 @@ class TranscribeAudio:
         # create method to make SToM and monoToText DRY
         pass
 
-    def SToM(self):
+    def SToM(self): # stereo to mono
         if self.splits != 0:
             # print(self.splits)
             for n in range(self.splits):
                 try:
-                    inFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{n}.wav", 'rb')
-                    outFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono{n}.wav", 'wb')
+                    inFile = wave.open(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{n}.wav", 'rb')
+                    outFile = wave.open(rf"{self.current_dir}\audio_files\mono_files\test_conversion_mono{n}.wav", 'wb')
 
                     outFile.setnchannels(1)
 
@@ -116,8 +116,8 @@ class TranscribeAudio:
                     inFile.close()
                     outFile.close()
             try:
-                inFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{self.splits}.wav", 'rb')
-                outFile = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\mono_files\test_conversion_mono{self.splits}.wav", 'wb')
+                inFile = wave.open(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{self.splits}.wav", 'rb')
+                outFile = wave.open(rf"{self.current_dir}\audio_files\mono_files\test_conversion_mono{self.splits}.wav", 'wb')
 
                 outFile.setnchannels(1)
 
@@ -165,7 +165,7 @@ class TranscribeAudio:
             # print(self.splits)
             for n in range(self.splits):
                 # Changed the open file to a wav file instead of mono due to pitch problems
-                wf = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{n}.wav", "rb")
+                wf = wave.open(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{n}.wav", "rb")
 
                 # build the model and recognizer objects.
                 model = Model(self.languageModel)
@@ -194,16 +194,16 @@ class TranscribeAudio:
                 textResults.append(resultDict.get("text", ""))
 
                 # write results to a file
-                with open(rf"A:\New_python\speechToTextVosk\results\timestamp_results{n}.json", 'w') as output:
+                with open(rf"{self.current_dir}\results\timestamp_results{n}.json", 'w') as output:
                     print(results, file=output)
 
                 # write text portion of results to a file
-                with open(rf"A:\New_python\speechToTextVosk\results\results_text{n}.json", 'w') as output:
+                with open(rf"{self.current_dir}\results\results_text{n}.json", 'w') as output:
                     text_string = " ".join(textResults)
                     text = text_string.replace(" i ", " I ").replace("i'", "I'")
                     json.dump(text, output, indent=4)
 
-            wf = wave.open(rf"A:\New_python\speechToTextVosk\audio_files\wav_files\transcribing_test{self.splits}.wav", "rb")
+            wf = wave.open(rf"{self.current_dir}\audio_files\wav_files\transcribing_test{self.splits}.wav", "rb")
             # build the model and recognizer objects.
             model = Model(self.languageModel)
             recognizer = KaldiRecognizer(model, wf.getframerate())
@@ -231,11 +231,11 @@ class TranscribeAudio:
             textResults.append(resultDict.get("text", ""))
 
             # write results to a file
-            with open(rf"A:\New_python\speechToTextVosk\results\timestamp_results{self.splits}.json", 'w') as output:
+            with open(rf"{self.current_dir}\results\timestamp_results{self.splits}.json", 'w') as output:
                 print(results, file=output)
 
             # write text portion of results to a file
-            with open(rf"A:\New_python\speechToTextVosk\results\results_text{self.splits}.json", 'w') as output:
+            with open(rf"{self.current_dir}\results\results_text{self.splits}.json", 'w') as output:
                 text_string = " ".join(textResults)
                 text = text_string.replace(" i ", " I ").replace("i'", "I'")
                 json.dump(text, output, indent=4)
@@ -293,5 +293,5 @@ class TranscribeAudio:
         total_time = endTime - startTime
         minutes = int(total_time / self.seconds)
         seconds = int(total_time % self.seconds)
-        print(f'Total time it took to transcribe is {minutes}:{seconds}')
+        print(f'Total time it took to transcribe is {minutes}min:{seconds}sec')
 

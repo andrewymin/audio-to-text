@@ -1,6 +1,9 @@
 vosk_lang/
 audio_files/
 results/
+__pycache__/
+
+!audio_files/notification_sound.mp3
 
 test.py
 wav_to_text.py

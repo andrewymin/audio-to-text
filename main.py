@@ -1,18 +1,14 @@
 from transcribe import TranscribeAudio
-from dotenv import load_dotenv
 import os
-load_dotenv()
 
-
-
-MP3 = os.environ.get(r"audio_file")
-# MP3 = r"A:\New_python\speechToTextVosk\audio_files\transcribing_2.mp3"
+MP3 = rf"{os.getcwd()}\audio_files\transcribing_2.mp3"
+Model = rf'{os.getcwd()}\vosk_lang\vosk-model-en-us-0.22'
 
 try:
-    wav_file = TranscribeAudio(MP3)  # Creating object with src file passed in with mp3 file
+    wav_file = TranscribeAudio(MP3, Model)  # Creating object with src file passed in with mp3 file
     wav_file.convertFile()  # Converting mp3 to stereo wav file
-    # wav_file.SToM()
-    wav_file.monoToText()
+    wav_file.SToM() # Convert stereo to mono
+    wav_file.monoToText() # transcribe mono to text
 except Exception as e:
     print(e)
 else:
