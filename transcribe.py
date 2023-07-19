@@ -16,7 +16,7 @@ class TranscribeAudio:
         self.current_dir = os.getcwd()
         self.src = recording
         self.audio = MP3(recording)
-        self.endingMp3 = 'audio_files/notification_sound.mp3'
+        self.endingMp3 = 'notification_sound.mp3'
         self.languageModel = model
         self.stereoFile = rf"{self.current_dir}\audio_files\wav_files\transcribing_test.wav"
         self.monoFile = rf"{self.current_dir}\audio_files\mono_files\test_conversion_mono.wav"

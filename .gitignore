@@ -4,8 +4,6 @@ results/
 __pycache__/
 .idea
 
-!audio_files/notification_sound.mp3
-
 test.py
 wav_to_text.py
 stereo_to_mono.py
