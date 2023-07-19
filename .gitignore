@@ -2,6 +2,7 @@ vosk_lang/
 audio_files/
 results/
 __pycache__/
+.idea
 
 !audio_files/notification_sound.mp3
 
